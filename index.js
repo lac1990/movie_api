@@ -1,51 +1,92 @@
-let http = require('http');
-let fs = require('fs');
-let url = require('url');
-let path = require('path');
+const express = require('express'),
+ morgan = require('morgan'),
+fs = require('fs'), // import built in node modules fs and path 
+path = require('path');
+const app = express();
 
-http.createServer((request, response) => {
-  let addr = request.url,
-    q = new URL(addr, 'http://' + request.headers.host),
-    filePath = '';
+let topMovies = [
+    {
+    title: 'The Goddather',
+    director: 'Francis Ford Coppola',
+    year: 1972
+  },
+  {
+    title: 'Shawshank Redemption',
+    director: 'Frank Darabont',
+    year: 1994
+  },
+  {
+    title: 'Dark Knight',
+    director: 'Christopher Nolan',
+    year: 2008
+  },
+  {
+    title: 'The Godfather: Part II',
+    director: 'Francis Ford Coppola',
+    year: 1974
+  },
+  {
+    title: 'I12 Angry Men',
+    director: ['Sidney Lumet'],
+    year: 1957
+  },
+  {
+    title: 'Lord of the Rings: The Return of the King',
+    directorr: 'Peter Jackson',
+    year: 2003
+  },
+  {
+    title: 'Pulp Fiction',
+    director: 'Quentin Tarantino',
+    year: 1994
+  },
+  {
+    title: 'The Lord of the Rings: The Fellowship of the Ring',
+    director: 'Peter Jackson',
+    year: 2001
+  },
+  {
+    title: 'The Good, the Bad, and the Ugly',
+    director: 'Sergio Leone',
+    year: 1966
+  },
+  {
+    title: 'Goodfellas',
+    director: 'Martin Scorsese',
+    year: 1990
+  },
 
-  console.log('Request URL:', addr);
+  ];
 
-  fs.appendFile('log.txt', 'URL: ' + addr + '\nTimestamp: ' + new Date() + '\n\n', (err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log('Added to log.');
-    }
+ // setup logging
+ const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log.txt'), {flags: 'a'})
+  // enable morgan logging to 'log.txt'
+ app.use(morgan('combined', {stream: accessLogStream})); 
+
+
+// setup app routing
+app.use(express.static('public'));
+
+
+// GET request
+  app.get('/', (req, res)=>{
+    res.send('Welcome to Movie Api!');
   });
-
-  if (q.pathname.includes('documentation')) {
-    filePath = path.join(__dirname, 'documentation.html');
-  } else {
-    filePath = path.join(__dirname, 'index.html');
-  }
-
-  console.log('File Path:', filePath);
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        console.log('File not found:', filePath);
-        response.writeHead(404);
-        response.end('Not Found');
-      } else {
-        console.log('Internal Server Error:', err);
-        response.writeHead(500);
-        response.end('Internal Server Error');
-      }
-    } else {
-      console.log('File read successfully:', filePath);
-      response.writeHead(200, { 'Content-Type': 'text/html' });
-      response.write(data);
-      response.end();
-    }
+  app.get('/documentation.html', (req, res)=>{
+    res.sendFile('public/documentation.html', {root: __dirname});
   });
+app.get('/movies', (req, res)=>{
+  res.json(topMovies);
+});
 
-}).listen(8080);
 
-console.log('My test server is running on Port 8080.');
-  
+// Error handling midleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something went wrong!');
+});
+
+
+app.listen(8080, () => {
+    console.log('My first Node test server is running on Port 8080.');
+});
