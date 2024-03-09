@@ -1,11 +1,14 @@
+const { error } = require('console');
 const express = require('express'),
- morgan = require('morgan'),
-fs = require('fs'), // import built in node modules fs and path 
-path = require('path');
+morgan = require('morgan');
 const app = express();
 
-let topMovies = [
-    {
+// Logging midleware
+app.use(morgan('common'));
+
+// Movie data
+let topTenMovies = [
+  {
     title: 'The Goddather',
     director: 'Francis Ford Coppola',
     year: 1972
@@ -32,7 +35,7 @@ let topMovies = [
   },
   {
     title: 'Lord of the Rings: The Return of the King',
-    directorr: 'Peter Jackson',
+    director: 'Peter Jackson',
     year: 2003
   },
   {
@@ -58,34 +61,32 @@ let topMovies = [
 
   ];
 
- // setup logging
- const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log.txt'), {flags: 'a'})
-  // enable morgan logging to 'log.txt'
- app.use(morgan('combined', {stream: accessLogStream})); 
+let myLogger = (req, res, next) => {
+    console.log(req.url);
+    next();
+  };
 
+  app.use(myLogger);
 
-// setup app routing
-app.use(express.static('public'));
+// Welcome route
 
-
-// GET request
-  app.get('/', (req, res)=>{
-    res.send('Welcome to Movie Api!');
-  });
-  app.get('/documentation.html', (req, res)=>{
-    res.sendFile('public/documentation.html', {root: __dirname});
-  });
-app.get('/movies', (req, res)=>{
-  res.json(topMovies);
+  app.get('/', (req, res) => {
+    res.send('Welcome to Movie API!');
 });
 
+// Movie route
+app.get( '/movies', (req, res) => {
+    res.json(topTenMovies);
+});
+
+//Static file
+app.use('/documentation', express.static('public', {index: 'documentation.html'}));
 
 // Error handling midleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something went wrong!');
 });
-
 
 app.listen(8080, () => {
     console.log('My first Node test server is running on Port 8080.');
