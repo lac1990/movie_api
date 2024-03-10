@@ -58,7 +58,6 @@ let topTenMovies = [
     director: 'Martin Scorsese',
     year: 1990
   },
-
   ];
 
 let myLogger = (req, res, next) => {
